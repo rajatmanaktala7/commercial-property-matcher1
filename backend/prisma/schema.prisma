@@ -18,7 +18,7 @@ model Team {
   users       User[]
   properties  Property[]
   clients     Client[]
-  matches     Match[]
+
   sheet_connections SheetConnection[]
   sync_logs   SyncLog[]
   activity_logs ActivityLog[]
@@ -74,7 +74,7 @@ model Property {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  matches         Match[]
+
 
   @@index([team_id])
   @@index([city, state])
@@ -107,7 +107,7 @@ model Client {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  matches         Match[]
+
 
   @@index([team_id])
   @@map("clients")
