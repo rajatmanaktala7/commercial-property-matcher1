@@ -166,7 +166,7 @@ model SyncLog {
   started_at        DateTime @default(now())
   completed_at      DateTime?
 
-  @@index([team_id, started_at])
+  @@index([team_id, created_at])
   @@map("sync_logs")
 }
 
@@ -184,6 +184,6 @@ model ActivityLog {
 
   created_at   DateTime @default(now())
 
-  @@index([team_id, started_at])
+  @@index([team_id, created_at])
   @@map("activity_logs")
 }
