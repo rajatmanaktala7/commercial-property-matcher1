@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  plan_type   String   @default("free")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  users       User[]
+  properties  Property[]
+  clients     Client[]
+  matches     Match[]
+  sheet_connections SheetConnection[]
+  sync_logs   SyncLog[]
+  activity_logs ActivityLog[]
+
+  @@map("teams")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  role          String   @default("viewer")
+  avatar_url    String?
+  password_hash String?
+  google_id     String?  @unique
+  last_active   DateTime @default(now())
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  team_id       String
+  team          Team     @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  activity_logs ActivityLog[]
+
+  @@map("users")
+}
+
+model Property {
+  id              String   @id @default(cuid())
+  team_id         String
+  team            Team     @relation(fields: [team_id], references: [id], onDelete: Cascade)
+
+  title           String
+  address         String
+  city            String
+  state           String
+  zip             String?
+  lat             Float?
+  lng             Float?
+
+  property_type   String
+  price           Float
+  sqft            Float?
+  bedrooms        Int?
+  bathrooms       Float?
+  cap_rate        Float?
+  noi             Float?
+  occupancy_rate  Float?
+
+  status          String   @default("active")
+  source_sheet_id String?
+  metadata        Json?    @default("{}")
+
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  matches         Match[]
+
+  @@index([team_id])
+  @@index([city, state])
+  @@index([property_type])
+  @@index([price])
+  @@map("properties")
+}
+
+model Client {
+  id              String   @id @default(cuid())
+  team_id         String
+  team            Team     @relation(fields: [team_id], references: [id], onDelete: Cascade)
+
+  name            String
+  email           String?
+  phone           String?
+  company         String?
+
+  budget_min      Float?
+  budget_max      Float?
+  preferred_cities String[]
+  property_types  String[]
+  min_sqft        Float?
+  max_sqft        Float?
+  min_cap_rate    Float?
+
+  status          String   @default("active")
+  notes           String?
+
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  matches         Match[]
+
+  @@index([team_id])
+  @@map("clients")
+}
+
+model Match {
+  id            String   @id @default(cuid())
+  property_id   String
+  property      Property @relation(fields: [property_id], references: [id], onDelete: Cascade)
+  client_id     String
+  client        Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+
+  score         Float
+  match_factors Json     @default("{}")
+  status        String   @default("new")
+
+  viewed_at     DateTime?
+  saved_at      DateTime?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@unique([property_id, client_id])
+  @@index([client_id, score])
+  @@map("matches")
+}
+
+model SheetConnection {
+  id              String   @id @default(cuid())
+  team_id         String
+  team            Team     @relation(fields: [team_id], references: [id], onDelete: Cascade)
+
+  provider        String   @default("google")
+  sheet_id        String?
+  sheet_name      String?
+  sync_frequency  String   @default("manual")
+  last_sync       DateTime?
+  mapping_config  Json     @default("{}")
+  is_active       Boolean  @default(true)
+
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@map("sheet_connections")
+}
+
+model SyncLog {
+  id                String   @id @default(cuid())
+  team_id           String
+  team              Team     @relation(fields: [team_id], references: [id], onDelete: Cascade)
+
+  source            String
+  status            String
+  records_processed Int      @default(0)
+  errors            Json?    @default("[]")
+
+  started_at        DateTime @default(now())
+  completed_at      DateTime?
+
+  @@index([team_id, created_at])
+  @@map("sync_logs")
+}
+
+model ActivityLog {
+  id           String   @id @default(cuid())
+  team_id      String
+  team         Team     @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  user_id      String?
+  user         User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  action       String
+  entity_type  String?
+  entity_id    String?
+  metadata     Json?    @default("{}")
+
+  created_at   DateTime @default(now())
+
+  @@index([team_id, created_at])
+  @@map("activity_logs")
+}

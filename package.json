@@ -1,0 +1,21 @@
+{
+  "name": "commercial-property-matcher",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently "npm run dev:backend" "npm run dev:frontend"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build && cd ../backend && npm run build",
+    "start": "cd backend && npm start",
+    "db:migrate": "cd backend && npx prisma migrate deploy",
+    "db:generate": "cd backend && npx prisma generate",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
